@@ -56,7 +56,6 @@
                             <useUniqueVersions>false</useUniqueVersions>
                             <classpathPrefix>lib/</classpathPrefix>
                             <mainClass>com.trivadis.jdbcproxy.Main</mainClass>
-                            <Class-Path>.</Class-Path>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
