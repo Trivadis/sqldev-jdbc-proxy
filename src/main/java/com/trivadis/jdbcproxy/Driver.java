@@ -30,7 +30,7 @@ public class Driver implements java.sql.Driver {
     public Connection connect(String url, Properties info) throws SQLException {
         if (acceptsURL(url)) {
             if (url.startsWith("jdbc:proxy:")) {
-                String targetUrl = url.substring(11);
+                String targetUrl = url.substring("jdbc:proxy:".length());
                 if (targetUrl.startsWith("jdbc:mysql:")) {
                     return connect(targetUrl, info);
                 } else {
