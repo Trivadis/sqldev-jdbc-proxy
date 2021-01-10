@@ -44,7 +44,17 @@ public class Driver implements java.sql.Driver {
                 while (drivers.hasMoreElements()) {
                     java.sql.Driver targetDriver = drivers.nextElement();
                     if (targetDriver instanceof com.mysql.cj.jdbc.Driver) {
-                        return targetDriver.connect(url, info);
+                        if (url.startsWith("jdbc:mysql://jdbc:")) {
+                            // make proxy URL, remove database parameter (host is not expected/supported)
+                            int lastPos = url.lastIndexOf(":/");
+                            if (lastPos < 0) {
+                                lastPos = url.length();
+                            }
+                            String targetUrl = "jdbc:proxy:" + url.substring("jdbc:mysql://".length(), lastPos);
+                            return connect(targetUrl, info);
+                        } else {
+                            return targetDriver.connect(url, info);
+                        }
                     }
                 }
                 throw new SQLException("Cannot connect. Cannot find MySQL driver.");
