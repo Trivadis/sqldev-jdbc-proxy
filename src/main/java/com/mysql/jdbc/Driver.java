@@ -16,9 +16,11 @@
 
 package com.mysql.jdbc;
 
+import com.trivadis.jdbcproxy.ProxyDriver;
+
 import java.sql.SQLException;
 
-public class Driver extends com.trivadis.jdbcproxy.Driver {
+public class Driver extends ProxyDriver {
     public Driver() throws SQLException {
         super();
     }

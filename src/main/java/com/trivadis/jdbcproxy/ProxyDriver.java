@@ -21,8 +21,8 @@ import java.util.Enumeration;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-public class Driver implements java.sql.Driver {
-    public Driver() throws SQLException {
+public class ProxyDriver implements Driver {
+    public ProxyDriver() throws SQLException {
         super();
     }
 
@@ -34,15 +34,15 @@ public class Driver implements java.sql.Driver {
                 if (targetUrl.startsWith("jdbc:mysql:")) {
                     return connect(targetUrl, info);
                 } else {
-                    java.sql.Driver targetDriver;
+                    Driver targetDriver;
                     targetDriver = DriverManager.getDriver(targetUrl);
                     return targetDriver.connect(targetUrl, info);
                 }
             } else {
                 // original MySQL JDBC URL
-                Enumeration<java.sql.Driver> drivers = DriverManager.getDrivers();
+                Enumeration<Driver> drivers = DriverManager.getDrivers();
                 while (drivers.hasMoreElements()) {
-                    java.sql.Driver targetDriver = drivers.nextElement();
+                    Driver targetDriver = drivers.nextElement();
                     if (targetDriver instanceof com.mysql.cj.jdbc.Driver) {
                         if (url.startsWith("jdbc:mysql://jdbc:")) {
                             // make proxy URL, remove database parameter (host is not expected/supported)
@@ -99,7 +99,7 @@ public class Driver implements java.sql.Driver {
 
     static {
         try {
-            DriverManager.registerDriver(new Driver());
+            DriverManager.registerDriver(new ProxyDriver());
         } catch (SQLException e) {
             throw new RuntimeException("Driver cannot be registered.");
         }
