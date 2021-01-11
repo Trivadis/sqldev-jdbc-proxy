@@ -12,6 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
+        <sqldev.basedir>/Applications/SQLDeveloper20.2.0.app/Contents/Resources/sqldeveloper</sqldev.basedir>
     </properties>
 
     <build>
@@ -99,6 +100,7 @@
             <artifactId>snowflake-jdbc</artifactId>
             <version>3.12.16</version>
         </dependency>
+        <!-- for testing only -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-jdbc</artifactId>
@@ -110,6 +112,42 @@
             <artifactId>junit-jupiter</artifactId>
             <version>5.7.0</version>
             <scope>test</scope>
+        </dependency>
+        <!-- for remote debugging only -->
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle.dbtools-common</artifactId>
+            <version>19.4.0</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/sqldeveloper/lib/dbtools-common.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle.ide.navigator</artifactId>
+            <version>13.0.0</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/ide/extensions/oracle.ide.navigator.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle.javatools-nodeps</artifactId>
+            <version>12.2.1</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/external/oracle.javatools-nodeps.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle.sqldeveloper</artifactId>
+            <version>19.3.0</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/sqldeveloper/extensions/oracle.sqldeveloper.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
+            <artifactId>oracle.sqldeveloper.thirdparty.browsers</artifactId>
+            <version>13.0.0</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/sqldeveloper/extensions/oracle.sqldeveloper.thirdparty.browsers.jar</systemPath>
         </dependency>
     </dependencies>
 
