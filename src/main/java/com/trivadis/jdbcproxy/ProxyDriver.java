@@ -36,7 +36,7 @@ public class ProxyDriver implements Driver {
                 } else {
                     Driver targetDriver;
                     targetDriver = DriverManager.getDriver(targetUrl);
-                    return targetDriver.connect(targetUrl, info);
+                    return new ProxyConnection(targetDriver.connect(targetUrl, info));
                 }
             } else {
                 // original MySQL JDBC URL
@@ -53,7 +53,7 @@ public class ProxyDriver implements Driver {
                             String targetUrl = "jdbc:proxy:" + url.substring("jdbc:mysql://".length(), lastPos);
                             return connect(targetUrl, info);
                         } else {
-                            return targetDriver.connect(url, info);
+                            return new ProxyConnection(targetDriver.connect(url, info));
                         }
                     }
                 }
