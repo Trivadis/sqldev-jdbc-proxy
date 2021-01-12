@@ -21,12 +21,10 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
-import java.sql.SQLException;
-
 public class DriverTests {
 
     @Test
-    void jdbcProxy_to_PostgreSQL() throws SQLException {
+    void jdbcProxy_to_PostgreSQL() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:proxy:jdbc:postgresql://localhost:5432/postgres");
         dataSource.setUsername("postgres");
@@ -37,7 +35,7 @@ public class DriverTests {
     }
 
     @Test
-    void jdbcProxy_to_MySQL() throws SQLException {
+    void jdbcProxy_to_MySQL() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:proxy:jdbc:mysql://localhost:3306/mysql");
         dataSource.setUsername("root");
@@ -48,7 +46,7 @@ public class DriverTests {
     }
 
     @Test
-    void jdbcProxy_to_MySQL_with_original_URL() throws SQLException {
+    void jdbcProxy_to_MySQL_with_original_URL() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:mysql://localhost:3306/mysql");
         dataSource.setUsername("root");
@@ -59,7 +57,7 @@ public class DriverTests {
     }
 
     @Test
-    void mySQL_with_old_Driver() throws SQLException {
+    void mySQL_with_old_Driver() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://localhost:3306/mysql");
@@ -71,7 +69,7 @@ public class DriverTests {
     }
 
     @Test
-    void mySQL_with_old_Driver_to_PostgreSQL() throws SQLException {
+    void mySQL_with_old_Driver_to_PostgreSQL() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://jdbc:postgresql://localhost:5432/postgres:/SomeDbToRemove");
@@ -83,7 +81,8 @@ public class DriverTests {
     }
 
     //@Test
-    void jdbcProxy_to_Snowflake() throws SQLException {
+    @SuppressWarnings("unused")
+    void jdbcProxy_to_Snowflake() {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:proxy:jdbc:snowflake://<account>.snowflakecomputing.com:443");
         dataSource.setUsername("<username>");
