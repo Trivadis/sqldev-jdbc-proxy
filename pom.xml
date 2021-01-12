@@ -130,6 +130,13 @@
         </dependency>
         <dependency>
             <groupId>oracle</groupId>
+            <artifactId>oracle.jdeveloper.java.core.jar</artifactId>
+            <version>13.0.0</version>
+            <scope>system</scope>
+            <systemPath>${sqldev.basedir}/ide/extensions/oracle.ide.jar</systemPath>
+        </dependency>
+        <dependency>
+            <groupId>oracle</groupId>
             <artifactId>oracle.javatools-nodeps</artifactId>
             <version>12.2.1</version>
             <scope>system</scope>
