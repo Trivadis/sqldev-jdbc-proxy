@@ -45,12 +45,8 @@ public class ProxyDriver implements Driver {
                     Driver targetDriver = drivers.nextElement();
                     if (targetDriver instanceof com.mysql.cj.jdbc.Driver) {
                         if (url.startsWith("jdbc:mysql://jdbc:")) {
-                            // make proxy URL, remove database parameter (host is not expected/supported)
-                            int lastPos = url.lastIndexOf(":/");
-                            if (lastPos < 0) {
-                                lastPos = url.length();
-                            }
-                            String targetUrl = "jdbc:proxy:" + url.substring("jdbc:mysql://".length(), lastPos);
+                            // make proxy URL, remove superfluous parameters (port, database)
+                            String targetUrl = "jdbc:proxy:" + UrlUtil.extractTargetUrl(url);
                             return connect(targetUrl, info);
                         } else {
                             return new ProxyConnection(targetDriver.connect(url, info));
