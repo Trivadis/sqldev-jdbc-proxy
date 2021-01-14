@@ -1,8 +1,24 @@
+/*
+ * Copyright 2021 Philipp Salvisberg <philipp.salvisberg@trivadis.com>
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.trivadis.jdbcproxy;
 
 import java.sql.*;
 
-public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mysql.cj.jdbc.DatabaseMetaData */{
+public class ProxyDatabaseMetaData implements DatabaseMetaData {
     final DatabaseMetaData target;
 
     public ProxyDatabaseMetaData(DatabaseMetaData databaseMetaData) {
@@ -10,8 +26,9 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mys
         target = databaseMetaData;
     }
 
-    private boolean fakeMySql() throws SQLException {
-        return "Snowflake".equals(target.getDatabaseProductName());
+    private boolean pretendToBeMySql() throws SQLException {
+        String product = target.getDatabaseProductName();
+        return !"MySQL".equals(product);
     }
 
     @Override
@@ -61,7 +78,7 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mys
 
     @Override
     public String getDatabaseProductName() throws SQLException {
-        if (fakeMySql()) {
+        if (pretendToBeMySql()) {
             return "MySQL";
         }
         return target.getDatabaseProductName();
@@ -69,7 +86,7 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mys
 
     @Override
     public String getDatabaseProductVersion() throws SQLException {
-        if (fakeMySql()) {
+        if (pretendToBeMySql()) {
             return "8.0.0";
         }
         return target.getDatabaseProductVersion();
@@ -812,7 +829,7 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mys
 
     @Override
     public int getDatabaseMajorVersion() throws SQLException {
-        if (fakeMySql()) {
+        if (pretendToBeMySql()) {
             return 8;
         }
         return target.getDatabaseMajorVersion();
@@ -820,7 +837,7 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData /*extends com.mys
 
     @Override
     public int getDatabaseMinorVersion() throws SQLException {
-        if (fakeMySql()) {
+        if (pretendToBeMySql()) {
             return 0;
         }
         return target.getDatabaseMinorVersion();
