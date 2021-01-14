@@ -21,10 +21,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.SingleConnectionDataSource;
 
+import java.io.File;
+import java.io.IOException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.sql.Statement;
+
 public class DriverTests {
 
     @Test
-    void jdbcProxy_to_PostgreSQL() {
+    void jdbcProxy_to_PostgreSQL() throws SQLException {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:proxy:jdbc:postgresql://localhost:5432/postgres");
         dataSource.setUsername("postgres");
@@ -32,10 +38,11 @@ public class DriverTests {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
         Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
     }
 
     @Test
-    void jdbcProxy_to_MySQL() {
+    void jdbcProxy_to_MySQL() throws SQLException {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:proxy:jdbc:mysql://localhost:3306/mysql");
         dataSource.setUsername("root");
@@ -43,10 +50,11 @@ public class DriverTests {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
         Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
     }
 
     @Test
-    void jdbcProxy_to_MySQL_with_original_URL() {
+    void jdbcProxy_to_MySQL_with_original_URL() throws SQLException {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setUrl("jdbc:mysql://localhost:3306/mysql");
         dataSource.setUsername("root");
@@ -54,10 +62,11 @@ public class DriverTests {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
         Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
     }
 
     @Test
-    void mySQL_with_old_Driver() {
+    void mySQL_with_old_Driver() throws SQLException {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://localhost:3306/mysql");
@@ -66,10 +75,11 @@ public class DriverTests {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
         Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
     }
 
     @Test
-    void mySQL_with_old_Driver_to_PostgreSQL() {
+    void mySQL_with_old_Driver_to_PostgreSQL() throws SQLException {
         SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
         dataSource.setDriverClassName("com.mysql.jdbc.Driver");
         dataSource.setUrl("jdbc:mysql://jdbc:postgresql://localhost:5432/postgres:/SomeDbToRemove");
@@ -78,6 +88,32 @@ public class DriverTests {
         JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
         String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
         Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
+    }
+
+    @Test
+    void mySQL_with_old_Driver_to_SQLite() throws SQLException {
+        SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://jdbc:sqlite::memory::/SomeDbToRemove");
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
+        Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
+    }
+
+    @Test
+    void mySQL_with_old_Driver_to_H2() throws IOException, SQLException {
+        SingleConnectionDataSource dataSource = new SingleConnectionDataSource();
+        File file = File.createTempFile("h2-test-", "");
+        dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+        dataSource.setUrl("jdbc:mysql://jdbc:h2:" + file.getAbsolutePath() + ":/SomeDbToRemove");
+        dataSource.setUsername("sa");
+        dataSource.setPassword("sa");
+        JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource);
+        String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
+        Assertions.assertEquals("Hello World!", actual);
+        Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
     }
 
     //@Test
