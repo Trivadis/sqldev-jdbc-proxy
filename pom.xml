@@ -85,6 +85,7 @@
         </plugins>
     </build>
     <dependencies>
+        <!-- OpenSource JDBC drivers -->
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
@@ -95,6 +96,17 @@
             <artifactId>postgresql</artifactId>
             <version>42.2.18</version>
         </dependency>
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.34.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <version>1.4.200</version>
+        </dependency>
+        <!-- commercial JDBC drivers available on Maven Central -->
         <dependency>
             <groupId>net.snowflake</groupId>
             <artifactId>snowflake-jdbc</artifactId>
