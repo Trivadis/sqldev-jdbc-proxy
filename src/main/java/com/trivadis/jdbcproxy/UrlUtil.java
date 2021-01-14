@@ -22,15 +22,15 @@ import java.util.regex.Pattern;
 public class UrlUtil {
     public static final String INVALID_FORMAT = "Invalid proxy URL. Expected format: jdbc:mysql://<targetUrl>:[<port>]/[<database>]";
 
+    private UrlUtil() {
+        // do not instantiate
+    }
+
     /**
      * Extracts the target part of a JDBC URL constructed by SQL Developer.
      * Example: "jdbc:mysql:jdbc:mysql://localhost:3306/mysql:3306/mysql"
      * returns "jdbc:mysql://localhost:3306/mysql".
      */
-    private UrlUtil() {
-        // do not instantiate
-    }
-
     public static String extractTargetUrl(String url) {
         final Pattern p = Pattern.compile("^(jdbc:mysql:\\/\\/)(.+?)(:([0-9]+)?\\/([^\\/:]+)?)$");
         final Matcher m = p.matcher(url);
