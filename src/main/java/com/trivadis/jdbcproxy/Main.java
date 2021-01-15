@@ -75,7 +75,8 @@ public class Main {
 
     private void printInfo() {
         print("");
-        print("Trivadis JDBC Proxy version " + implementationVersion + " built on " + implementationDate + ".");
+        print("JDBC Proxy for SQL Developer version " + implementationVersion + " built on " + implementationDate + ".");
+        print("Copyright 2021 Philipp Salvisberg <philipp.salvisberg@trivadis.com>");
         print("");
     }
 
