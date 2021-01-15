@@ -56,8 +56,10 @@ public class SQLDevNavigatorSQLRewriter {
                 return "SELECT database_name\n" +
                         "  FROM information_schema.databases\n" +
                         " ORDER BY database_name";
-            } else if (H2.equals(product) || SQLITE.equals(product)) {
+            } else if (H2.equals(product)) {
                 return "SELECT 'PUBLIC' AS database_name";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT name AS database_name FROM pragma_database_list()";
             }
         }
         return sql;
@@ -75,7 +77,7 @@ public class SQLDevNavigatorSQLRewriter {
                         "  FROM information_schema.schemata\n" +
                         " ORDER BY schema_name";
             } else if (SQLITE.equals(product)) {
-                return "SELECT 'PUBLIC' AS \"SCHEMA_NAME\"";
+                return "SELECT 'main' AS \"SCHEMA_NAME\"";
             }
         }
         return sql;
@@ -116,7 +118,7 @@ public class SQLDevNavigatorSQLRewriter {
                         "  FROM sqlite_schema\n" +
                         " WHERE type = 'table'\n" +
                         "   AND ? IS NOT NULL\n" +
-                        " ORDER BY name;";
+                        " ORDER BY name";
             }
         }
         return sql;
@@ -176,7 +178,20 @@ public class SQLDevNavigatorSQLRewriter {
                         "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
                         " ORDER BY ordinal_position";
             } else if (SQLITE.equals(product)) {
-                return "SELECT NULL AS column_name";
+                return "SELECT name        AS column_name,\n" +
+                        "       type        AS data_type,\n" +
+                        "       CASE `notnull`\n" +
+                        "          WHEN 0 THEN\n" +
+                        "             'YES'\n" +
+                        "          WHEN 42 THEN\n" +
+                        "             coalesce(?, ?, ?)\n" +
+                        "          ELSE\n" +
+                        "             'NO'\n" +
+                        "       END         AS is_nullable,\n" +
+                        "       dflt_value  AS column_default\n" +
+                        "  FROM pragma_table_info (?)\n" +
+                        " WHERE coalesce(?, ?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
+                        " ORDER BY cid";
             }
         }
         return sql;
@@ -208,7 +223,7 @@ public class SQLDevNavigatorSQLRewriter {
                         "       index_name                                  AS \"INDEX_NAME\",\n" +
                         "       table_name                                  AS \"TABLE_NAME\"\n" +
                         "  FROM information_schema.indexes\n" +
-                        " WHERE schema_name = ?\n" +
+                        " WHERE table_schema = ?\n" +
                         " ORDER BY 1";
             } else if (SQLITE.equals(product)) {
                 return "SELECT name || ' (' || tbl_name || ')' AS \"IND_NAME\",\n" +
@@ -266,15 +281,17 @@ public class SQLDevNavigatorSQLRewriter {
                         "       column_name,\n" +
                         "       sql\n" +
                         "  FROM information_schema.indexes\n" +
-                        " WHERE table_name = ?\n" +
+                        " WHERE index_name = ?\n" +
                         "   AND table_schema = ?";
             } else if (SQLITE.equals(product)) {
-                return "SELECT name,\n" +
-                        "       sql\n" +
-                        "  FROM sqlite_schema\n" +
+                return "SELECT s.name    AS index_name,\n" +
+                        "       i.name    AS column_name,\n" +
+                        "       cid       AS seq_in_index\n" +
+                        "  FROM sqlite_schema s,\n" +
+                        "       pragma_index_info (?) i\n" +
                         " WHERE type = 'index'\n" +
                         "   AND ? IS NOT NULL\n" +
-                        " ORDER BY 1";
+                        " ORDER BY i.cid";
             }
         }
         return sql;
@@ -329,6 +346,37 @@ public class SQLDevNavigatorSQLRewriter {
                         "       NULL  AS nullable,\n" +
                         "       NULL  AS comment\n" +
                         " WHERE 'x' IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            } else if (H2.equals(product)) {
+                return "SELECT index_name,\n" +
+                        "       column_name,\n" +
+                        "       ordinal_position,\n" +
+                        "       sql\n" +
+                        "  FROM information_schema.indexes\n" +
+                        " WHERE coalesce(?, ?, ?, 'x') IS NOT NULL\n" +
+                        "   AND table_name = ?\n" +
+                        "   AND table_schema = ?\n" +
+                        "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
+                        " ORDER BY index_name,\n" +
+                        "          ordinal_position";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT DISTINCT\n" +
+                        "       i.name     AS index_name,\n" +
+                        "       c.name     AS column_name,\n" +
+                        "       c.seqno    AS seq_in_index,\n" +
+                        "       CASE i.`unique`\n" +
+                        "          WHEN 0   THEN\n" +
+                        "             'NO'\n" +
+                        "          WHEN 42  THEN\n" +
+                        "             coalesce(?, ?, ?)\n" +
+                        "          ELSE\n" +
+                        "             'YES'\n" +
+                        "       END        AS is_unique\n" +
+                        "  FROM sqlite_schema s,\n" +
+                        "       pragma_index_list (?) i,\n" +
+                        "       pragma_index_info (i.name) c\n" +
+                        " WHERE s.type = 'table'\n" +
+                        "   AND coalesce(?, ?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
+                        " ORDER BY c.seqno";
             }
         }
         return sql;
@@ -341,11 +389,34 @@ public class SQLDevNavigatorSQLRewriter {
         }
         if (sql.equals("SELECT CONSTRAINT_NAME, CONSTRAINT_TYPE FROM INFORMATION_SCHEMA.TABLE_CONSTRAINTS\n" +
                 "\t    \t\tWHERE TABLE_NAME = ? AND cast(TABLE_SCHEMA as binary) = ?")) {
-            return "SELECT constraint_name,\n" +
-                    "       constraint_type\n" +
-                    "  FROM information_schema.table_constraints\n" +
-                    " WHERE table_name = ?\n" +
-                    "   AND table_schema = ?";
+            if (SQLITE.equals(product)) {
+                return "SELECT constraint_name, constraint_type \n" +
+                        "  FROM (\n" +
+                        "         SELECT s.tbl_name    AS table_name,\n" +
+                        "                i.name        AS constraint_name,\n" +
+                        "                i.origin      AS constraint_type\n" +
+                        "           FROM sqlite_schema s,\n" +
+                        "                pragma_index_list (s.tbl_name) i\n" +
+                        "          WHERE s.type = 'index'\n" +
+                        "         UNION\n" +
+                        "         SELECT s.name           AS table_name,\n" +
+                        "                f.`table`\n" +
+                        "                || '_fk_'\n" +
+                        "                || ( f.seq + 1 ) AS constraint_name,\n" +
+                        "                'fk'             AS constraint_type\n" +
+                        "           FROM sqlite_schema s,\n" +
+                        "                pragma_foreign_key_list (s.name) f\n" +
+                        "          WHERE s.type = 'table'\n" +
+                        "       )\n" +
+                        "  WHERE table_name = ?\n" +
+                        "    AND ? IS NOT NULL";
+            } else {
+                return "SELECT constraint_name,\n" +
+                        "       constraint_type\n" +
+                        "  FROM information_schema.table_constraints\n" +
+                        " WHERE table_name = ?\n" +
+                        "   AND table_schema = ?";
+            }
         }
         return sql;
     }
@@ -355,7 +426,7 @@ public class SQLDevNavigatorSQLRewriter {
         if (MYSQL.equals(product)) {
             return sql;
         }
-        if (SNOWFLAKE.equals(product) && sql.equals("SELECT t.table_schema, \n" +
+        if (sql.equals("SELECT t.table_schema, \n" +
                 "  t.table_name, \n" +
                 "  t.constraint_name, \n" +
                 "  t.constraint_type, \n" +
@@ -369,15 +440,17 @@ public class SQLDevNavigatorSQLRewriter {
                 "AND t.constraint_type   = 'CHECK' \n" +
                 "AND c.constraint_name   = t.constraint_name \n" +
                 "AND c.constraint_schema = t.constraint_schema")) {
-            // no check constraints view in Snowflake
-            return "SELECT NULL  AS table_schema,\n" +
-                    "       NULL  AS table_name,\n" +
-                    "       NULL  AS constraint_name,\n" +
-                    "       NULL  AS constraint_type,\n" +
-                    "       NULL  AS is_deferrable,\n" +
-                    "       NULL  AS initially_deferred,\n" +
-                    "       NULL  AS check_clause\n" +
-                    " WHERE 'x' IN (?, ?)";
+            if (SNOWFLAKE.equals(product) || SQLITE.equals(product) || H2.equals(product)) {
+                // no check constraints view
+                return "SELECT NULL  AS table_schema,\n" +
+                        "       NULL  AS table_name,\n" +
+                        "       NULL  AS constraint_name,\n" +
+                        "       NULL  AS constraint_type,\n" +
+                        "       NULL  AS is_deferrable,\n" +
+                        "       NULL  AS initially_deferred,\n" +
+                        "       NULL  AS check_clause\n" +
+                        " WHERE 'x' IN (?, ?)";
+            }
         }
         return sql;
     }
@@ -388,10 +461,18 @@ public class SQLDevNavigatorSQLRewriter {
             return sql;
         }
         if (sql.equals("select TABLE_NAME from information_schema.views where cast(TABLE_SCHEMA as binary) = ?")) {
-            return "SELECT table_name AS \"TABLE_NAME\"\n" +
-                    "  FROM information_schema.views\n" +
-                    " WHERE table_schema = ?\n" +
-                    " ORDER BY table_name";
+            if (SQLITE.equals(product)) {
+                return "SELECT name AS \"TABLE_NAME\"\n" +
+                        "  FROM sqlite_schema\n" +
+                        " WHERE type = 'view'\n" +
+                        "   AND ? IS NOT NULL\n" +
+                        " ORDER BY name";
+            } else {
+                return "SELECT table_name AS \"TABLE_NAME\"\n" +
+                        "  FROM information_schema.views\n" +
+                        " WHERE table_schema = ?\n" +
+                        " ORDER BY table_name";
+            }
         }
         return sql;
     }
@@ -402,11 +483,18 @@ public class SQLDevNavigatorSQLRewriter {
             return sql;
         }
         if (sql.equals("select COLUMN_NAME from information_schema.Columns where cast(TABLE_SCHEMA as binary) = ? and cast(TABLE_NAME as binary) = ?")) {
-            return "SELECT column_name AS \"COLUMN_NAME\"\n" +
-                    "  FROM information_schema.columns\n" +
-                    " WHERE table_schema = ?\n" +
-                    "   AND table_name = ?\n" +
-                    " ORDER BY ordinal_position";
+            if (SQLITE.equals(product)) {
+                return "SELECT name AS \"COLUMN_NAME\",\n" +
+                        "      ?    AS schema_name\n" +
+                        "  FROM pragma_table_info (?)\n" +
+                        " ORDER BY cid";
+            } else {
+                return "SELECT column_name AS \"COLUMN_NAME\"\n" +
+                        "  FROM information_schema.columns\n" +
+                        " WHERE table_schema = ?\n" +
+                        "   AND table_name = ?\n" +
+                        " ORDER BY ordinal_position";
+            }
         }
         return sql;
     }
@@ -464,6 +552,36 @@ public class SQLDevNavigatorSQLRewriter {
                         "   AND table_schema = ?\n" +
                         "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
                         " ORDER BY ordinal_position";
+            } else if (H2.equals(product)) {
+                return "SELECT column_name,\n" +
+                        "       ordinal_position,\n" +
+                        "       column_default,\n" +
+                        "       is_nullable,\n" +
+                        "       data_type,\n" +
+                        "       numeric_precision,\n" +
+                        "       numeric_scale,\n" +
+                        "       remarks\n" +
+                        "  FROM information_schema.columns\n" +
+                        " WHERE coalesce(?, ?, ?, 'x') IS NOT NULL\n" +
+                        "   AND table_name = ?\n" +
+                        "   AND table_schema = ?\n" +
+                        "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
+                        " ORDER BY ordinal_position";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT name        AS column_name,\n" +
+                        "       type        AS data_type,\n" +
+                        "       CASE `notnull`\n" +
+                        "          WHEN 0 THEN\n" +
+                        "             'YES'\n" +
+                        "          WHEN 42 THEN\n" +
+                        "             coalesce(?, ?, ?)\n" +
+                        "          ELSE\n" +
+                        "             'NO'\n" +
+                        "       END         AS is_nullable,\n" +
+                        "       dflt_value  AS column_default\n" +
+                        "  FROM pragma_table_info (?)\n" +
+                        " WHERE coalesce(?, ?, ?, ?, ?, ?, 'x') IS NOT NULL\n" +
+                        " ORDER BY cid";
             }
         }
         return sql;
@@ -512,6 +630,22 @@ public class SQLDevNavigatorSQLRewriter {
                         "   AND table_name = ?\n" +
                         "   AND table_schema = ?\n" +
                         "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL";
+            } else if (H2.equals(product)) {
+                return "SELECT view_definition,\n" +
+                        "       check_option,\n" +
+                        "       is_updatable,\n" +
+                        "       status,\n" +
+                        "       remarks" +
+                        "  FROM information_schema.views\n" +
+                        " WHERE coalesce(?, ?, ?, 'x') IS NOT NULL\n" +
+                        "   AND table_name = ?\n" +
+                        "   AND table_schema = ?\n" +
+                        "   AND coalesce(?, ?, ?, ?, ?, 'x') IS NOT NULL";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT sql AS view_definition\n" +
+                        "  FROM sqlite_schema\n" +
+                        " WHERE type = 'view'\n" +
+                        "   AND name = ?";
             }
         }
         return sql;
@@ -528,7 +662,7 @@ public class SQLDevNavigatorSQLRewriter {
                         "  FROM pg_proc       p\n" +
                         "  JOIN pg_namespace  n\n" +
                         "    ON p.pronamespace = n.oid\n" +
-                        " WHERE p.prokind = 'f'\n" +
+                        " WHERE p.prokind = 'p'\n" +
                         "   AND n.nspname = ?";
             } else if (SNOWFLAKE.equals(product)) {
                 return "SELECT procedure_name AS specific_name\n" +
@@ -549,7 +683,7 @@ public class SQLDevNavigatorSQLRewriter {
         }
         if (sql.equals("select SPECIFIC_NAME from information_schema.routines where ROUTINE_TYPE = 'FUNCTION' and cast(ROUTINE_SCHEMA as binary) = ?")) {
             if (POSTGRES.equals(product)) {
-                return "SELECT specific_name AS \"SPECIFIC_NAME\"\n" +
+                return "SELECT routine_name AS \"SPECIFIC_NAME\"\n" +
                         "  FROM information_schema.routines\n" +
                         " WHERE routine_type = 'FUNCTION'\n" +
                         "   AND routine_schema = ?\n" +
@@ -571,12 +705,54 @@ public class SQLDevNavigatorSQLRewriter {
     }
 
     @SQLRewrite
+    public String showFunctionOrProcedureDetail(String sql, String product) {
+        if (MYSQL.equals(product)) {
+            return sql;
+        }
+        // the very same query is issued for function and procedure details
+        if (sql.equals("select routine_definition from information_schema.routines where cast(routine_schema as binary) = ? and routine_name = ?")) {
+            if (POSTGRES.equals(product)) {
+                // one view for functions and procedures in PostgreSQL as in MySQL
+                return "SELECT routine_definition" +
+                        "  FROM information_schema.routines\n" +
+                        " WHERE routine_schema = ?\n" +
+                        "   AND routine_name = ?\n";
+            } else if (SNOWFLAKE.equals(product)) {
+                // dedicated views for functions and procedures in Snowflake
+                return "SELECT routine_definition\n" +
+                        "  FROM (\n" +
+                        "          SELECT function_schema      AS routine_schema,\n" +
+                        "                 function_name        AS routine_name,\n" +
+                        "                 function_definition  AS routine_definition\n" +
+                        "            FROM information_schema.functions\n" +
+                        "          UNION ALL\n" +
+                        "          SELECT procedure_schema      AS routine_schema,\n" +
+                        "                 procedure_name        AS routine_name,\n" +
+                        "                 procedure_definition  AS routine_definition\n" +
+                        "            FROM information_schema.procedures\n" +
+                        "       )\n" +
+                        " WHERE routine_schema = ?\n" +
+                        "   AND routine_name = ?";
+            } else if (H2.equals(product)) {
+                // H2 supports only functions, no procedures
+                return "SELECT source\n" +
+                        "  FROM information_schema.function_aliases\n" +
+                        " WHERE alias_schema = ?\n" +
+                        "   AND alias_name = ?";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT NULL AS specific_name WHERE 'x' = ?";
+            }
+        }
+        return sql;
+    }
+
+    @SQLRewrite
     public String showTriggers(String sql, String product) {
         if (MYSQL.equals(product)) {
             return sql;
         }
         if (sql.equals("select TRIGGER_NAME from information_schema.triggers  where trigger_schema = ?  ")) {
-            if (POSTGRES.equals(product)) {
+            if (POSTGRES.equals(product) || H2.equals(product)) {
                 return "SELECT trigger_name AS \"TRIGGER_NAME\"\n" +
                         "  FROM information_schema.triggers\n" +
                         " WHERE trigger_schema = ?\n" +
@@ -584,9 +760,45 @@ public class SQLDevNavigatorSQLRewriter {
             } else if (SNOWFLAKE.equals(product)) {
                 // no triggers in Snowflake
                 return "SELECT null AS trigger_name WHERE 'x' = ?";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT name AS \"TRIGGER_NAME\"\n" +
+                        "  FROM sqlite_schema\n" +
+                        " WHERE type = 'trigger'\n" +
+                        "   AND ? IS NOT NULL";
             }
         }
         return sql;
     }
+
+    @SQLRewrite
+    public String showTriggerDetails(String sql, String product) {
+        if (MYSQL.equals(product)) {
+            return sql;
+        }
+        if (sql.equals("select action_statement from information_schema.triggers where cast(trigger_schema as binary) = ? and trigger_name = ?")) {
+            if (POSTGRES.equals(product)) {
+                return "SELECT action_statement\n" +
+                        "  FROM information_schema.triggers\n" +
+                        " WHERE trigger_schema = ?\n" +
+                        "   AND trigger_name = ?";
+            } else if (SNOWFLAKE.equals(product)) {
+                // no triggers in Snowflake
+                return "SELECT null AS action_statement WHERE 'x' = ?";
+            } else if (H2.equals(product)) {
+                return "SELECT sql\n" +
+                        "  FROM information_schema.triggers\n" +
+                        " WHERE trigger_schema = ?\n" +
+                        "   AND trigger_name = ?";
+            } else if (SQLITE.equals(product)) {
+                return "SELECT sql\n" +
+                        "  FROM sqlite_schema\n" +
+                        " WHERE type = 'trigger'\n" +
+                        "   AND ? IS NOT NULL\n" +
+                        "   AND name = ?";
+            }
+        }
+        return sql;
+    }
+
 
 }
