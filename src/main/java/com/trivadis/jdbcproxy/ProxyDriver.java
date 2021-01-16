@@ -22,7 +22,7 @@ import java.util.Properties;
 import java.util.logging.Logger;
 
 public class ProxyDriver implements Driver {
-    public ProxyDriver() throws SQLException {
+    public ProxyDriver() {
         super();
     }
 
