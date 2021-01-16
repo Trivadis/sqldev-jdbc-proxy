@@ -21,7 +21,7 @@ import com.trivadis.jdbcproxy.ProxyDriver;
 import java.sql.SQLException;
 
 public class Driver extends ProxyDriver {
-    public Driver() throws SQLException {
+    public Driver() {
         super();
     }
 }
