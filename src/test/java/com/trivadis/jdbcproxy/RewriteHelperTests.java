@@ -44,4 +44,16 @@ public class RewriteHelperTests {
         }
     }
 
+    @Nested
+    class WhenRewriteCall {
+        @Test void remove_to_number_call() {
+            RewriteHelper helper = new RewriteHelper();
+            Assertions.assertEquals("CALL p(?)", helper.rewriteCall(" begin  p(  to_number  (  ?  )  )  ;  end ; "));
+        }
+
+        @Test void remove_to_char_call() {
+            RewriteHelper helper = new RewriteHelper();
+            Assertions.assertEquals("CALL p(?)", helper.rewriteCall("begin p(to_char(?));end;"));
+        }
+    }
 }
