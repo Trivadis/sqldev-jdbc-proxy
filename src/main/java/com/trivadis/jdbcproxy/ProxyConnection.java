@@ -19,9 +19,12 @@ package com.trivadis.jdbcproxy;
 import com.trivadis.jdbcproxy.rewrite.RewriteUtil;
 
 import java.sql.*;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class ProxyConnection implements Connection {
     private final Connection target;
@@ -44,7 +47,14 @@ public class ProxyConnection implements Connection {
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
-        return target.prepareCall(sql);
+        final Pattern p = Pattern.compile("^BEGIN (.*?); END;$");
+        final Matcher m = p.matcher(sql);
+        if (m.find()) {
+            String call = "CALL " + m.group(1).replace("TO_NUMBER(?)", "?").replace("TO_CHAR(?)", "?");
+            return target.prepareCall(call);
+        } else {
+            return target.prepareCall(sql);
+        }
     }
 
     @Override
