@@ -710,31 +710,72 @@ public class SQLDevNavigatorSQLRewriter {
             return sql;
         }
         // the very same query is issued for function and procedure details
+        // multiple results when when more than one routine exists with the same name
+        // there must be an issue with overloading, also in original MySQL query
+        // provide full DDL (if such a function is provided by the DBMS)
         if (sql.equals("select routine_definition from information_schema.routines where cast(routine_schema as binary) = ? and routine_name = ?")) {
             if (POSTGRES.equals(product)) {
-                // one view for functions and procedures in PostgreSQL as in MySQL
-                return "SELECT routine_definition" +
-                        "  FROM information_schema.routines\n" +
-                        " WHERE routine_schema = ?\n" +
-                        "   AND routine_name = ?\n";
+                return "SELECT pg_get_functiondef(p.oid) as routine_definition\n" +
+                        "  FROM pg_namespace n\n" +
+                        "  JOIN pg_proc p ON n.oid = p.pronamespace\n" +
+                        " WHERE prokind IN ('f', 'p')\n" +
+                        "   AND n.nspname = ?\n" +
+                        "   AND p.proname = ?\n";
             } else if (SNOWFLAKE.equals(product)) {
                 // dedicated views for functions and procedures in Snowflake
+                // get_ddl function requires full signature which is available in the
+                // dictionary view, but in another format (e.g. "(PARAM FLOAT)" instead of "(FLOAT)"
+                // therefore building it the DDL from columns in metadata views
                 return "SELECT routine_definition\n" +
                         "  FROM (\n" +
-                        "          SELECT function_schema      AS routine_schema,\n" +
-                        "                 function_name        AS routine_name,\n" +
-                        "                 function_definition  AS routine_definition\n" +
+                        "          SELECT function_schema AS routine_schema,\n" +
+                        "                 function_name AS routine_name,\n" +
+                        "                 concat(\n" +
+                        "                    'CREATE OR REPLACE FUNCTION ',\n" +
+                        "                    function_catalog,\n" +
+                        "                    '.',\n" +
+                        "                    function_schema,\n" +
+                        "                    '.',\n" +
+                        "                    function_name,\n" +
+                        "                    argument_signature,\n" +
+                        "                    ' RETURNS ',\n" +
+                        "                    data_type,\n" +
+                        "                    chr(10),\n" +
+                        "                    'LANGUAGE ',\n" +
+                        "                    function_language,\n" +
+                        "                    chr(10),\n" +
+                        "                    'AS $$',\n" +
+                        "                    function_definition,\n" +
+                        "                    '$$'\n" +
+                        "                 ) AS routine_definition\n" +
                         "            FROM information_schema.functions\n" +
                         "          UNION ALL\n" +
-                        "          SELECT procedure_schema      AS routine_schema,\n" +
-                        "                 procedure_name        AS routine_name,\n" +
-                        "                 procedure_definition  AS routine_definition\n" +
+                        "          SELECT procedure_schema AS routine_schema,\n" +
+                        "                 procedure_name AS routine_name,\n" +
+                        "                 concat(\n" +
+                        "                    'CREATE OR REPLACE PROCEDURE ',\n" +
+                        "                    procedure_catalog,\n" +
+                        "                    '.',\n" +
+                        "                    procedure_schema,\n" +
+                        "                    '.',\n" +
+                        "                    procedure_name,\n" +
+                        "                    argument_signature,\n" +
+                        "                    ' RETURNS ',\n" +
+                        "                    data_type,\n" +
+                        "                    chr(10),\n" +
+                        "                    'LANGUAGE ',\n" +
+                        "                    procedure_language,\n" +
+                        "                    chr(10),\n" +
+                        "                    'AS $$',\n" +
+                        "                    procedure_definition,\n" +
+                        "                    '$$'\n" +
+                        "                 ) AS routine_definition\n" +
                         "            FROM information_schema.procedures\n" +
                         "       )\n" +
                         " WHERE routine_schema = ?\n" +
                         "   AND routine_name = ?";
             } else if (H2.equals(product)) {
-                // H2 supports only functions, no procedures
+                // H2 supports only functions, no procedures (implemented as Java classes)
                 return "SELECT source\n" +
                         "  FROM information_schema.function_aliases\n" +
                         " WHERE alias_schema = ?\n" +
@@ -777,10 +818,13 @@ public class SQLDevNavigatorSQLRewriter {
         }
         if (sql.equals("select action_statement from information_schema.triggers where cast(trigger_schema as binary) = ? and trigger_name = ?")) {
             if (POSTGRES.equals(product)) {
-                return "SELECT action_statement\n" +
-                        "  FROM information_schema.triggers\n" +
-                        " WHERE trigger_schema = ?\n" +
-                        "   AND trigger_name = ?";
+                return "SELECT pg_get_triggerdef(t.oid) AS action_statement\n" +
+                        "  FROM pg_namespace n\n" +
+                        "  JOIN pg_class c ON n.oid = c.relnamespace\n" +
+                        "  JOIN pg_trigger t ON c.oid = t.tgrelid\n" +
+                        " WHERE t.tgisinternal = false\n" +
+                        "   AND n.nspname = ?\n" +
+                        "   AND t.tgname = ?";
             } else if (SNOWFLAKE.equals(product)) {
                 // no triggers in Snowflake
                 return "SELECT null AS action_statement WHERE 'x' = ?";
