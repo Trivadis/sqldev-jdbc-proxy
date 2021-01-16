@@ -21,6 +21,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.trivadis.jdbcproxy.rewrite.SQLRewriter.SQLRewrite;
 
@@ -53,6 +55,22 @@ public class RewriteHelper {
     public String rewrite(String sql, String product) {
         String result = rewrite(fullRewriterMethods, sql, product);
         return rewrite(partialRewriterMethods, result, product);
+    }
+
+    /**
+     * Rewrites a call statement written for Oracle Databases to a
+     * generic target (independent of the product).
+     */
+    public String rewriteCall(String sql) {
+        final Pattern p = Pattern.compile("(?i)^\\s*BEGIN\\s+(.+?)\\s*;\\s*END\\s*;\\s*$");
+        final Matcher m = p.matcher(sql);
+        if (m.find()) {
+            String call = "CALL " + m.group(1)
+                    .replaceAll("(?i)\\s*TO_NUMBER\\s*\\(\\s*\\?\\s*\\)\\s*", "?")
+                    .replaceAll("(?i)\\s*TO_CHAR\\s*\\(\\s*\\?\\s*\\)\\s*", "?");
+            return call;
+        }
+        return sql;
     }
 
     private String rewrite(List<Method> methods, String sql, String product) {
