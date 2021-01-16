@@ -19,7 +19,7 @@ package com.trivadis.jdbcproxy;
 import java.sql.*;
 
 public class ProxyDatabaseMetaData implements DatabaseMetaData {
-    final DatabaseMetaData target;
+    private final DatabaseMetaData target;
 
     public ProxyDatabaseMetaData(DatabaseMetaData databaseMetaData) {
         super();
