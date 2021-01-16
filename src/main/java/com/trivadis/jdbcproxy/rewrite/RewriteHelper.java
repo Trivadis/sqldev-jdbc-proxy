@@ -24,12 +24,12 @@ import java.util.List;
 
 import com.trivadis.jdbcproxy.rewrite.SQLRewriter.SQLRewrite;
 
-public class RewriteUtil {
+public class RewriteHelper {
     private final SQLDevNavigatorSQLRewriter rewriter = new SQLDevNavigatorSQLRewriter();
     private final List<Method> fullRewriterMethods = new ArrayList<>();
     private final List<Method> partialRewriterMethods = new ArrayList<>();
 
-    public RewriteUtil() {
+    public RewriteHelper() {
         super();
         populateRewriterMethods();
     }
