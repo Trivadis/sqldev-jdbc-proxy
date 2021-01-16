@@ -28,7 +28,7 @@ public interface SQLRewriter {
 
     @Retention(RetentionPolicy.RUNTIME)
     @Target(ElementType.METHOD)
-    public @interface SQLRewrite {
+    @interface SQLRewrite {
         boolean full() default true;
     }
 
