@@ -65,10 +65,9 @@ public class RewriteHelper {
         final Pattern p = Pattern.compile("(?i)^\\s*BEGIN\\s+(.+?)\\s*;\\s*END\\s*;\\s*$");
         final Matcher m = p.matcher(sql);
         if (m.find()) {
-            String call = "CALL " + m.group(1)
+            return "CALL " + m.group(1)
                     .replaceAll("(?i)\\s*TO_NUMBER\\s*\\(\\s*\\?\\s*\\)\\s*", "?")
                     .replaceAll("(?i)\\s*TO_CHAR\\s*\\(\\s*\\?\\s*\\)\\s*", "?");
-            return call;
         }
         return sql;
     }
