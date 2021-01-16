@@ -16,19 +16,16 @@
 
 package com.trivadis.jdbcproxy;
 
-import com.trivadis.jdbcproxy.rewrite.RewriteUtil;
+import com.trivadis.jdbcproxy.rewrite.RewriteHelper;
 
 import java.sql.*;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class ProxyConnection implements Connection {
     private final Connection target;
-    private final RewriteUtil rewriterUtil = new RewriteUtil();
+    private final RewriteHelper rewriterHelper = new RewriteHelper();
 
     ProxyConnection(Connection connection) {
         target = connection;
@@ -42,19 +39,12 @@ public class ProxyConnection implements Connection {
     @Override
     public PreparedStatement prepareStatement(String sql) throws SQLException {
         final String product = target.getMetaData().getDatabaseProductName();
-        return target.prepareStatement(rewriterUtil.rewrite(sql, product));
+        return target.prepareStatement(rewriterHelper.rewrite(sql, product));
     }
 
     @Override
     public CallableStatement prepareCall(String sql) throws SQLException {
-        final Pattern p = Pattern.compile("^BEGIN (.*?); END;$");
-        final Matcher m = p.matcher(sql);
-        if (m.find()) {
-            String call = "CALL " + m.group(1).replace("TO_NUMBER(?)", "?").replace("TO_CHAR(?)", "?");
-            return target.prepareCall(call);
-        } else {
-            return target.prepareCall(sql);
-        }
+        return target.prepareCall(rewriterHelper.rewriteCall(sql));
     }
 
     @Override
