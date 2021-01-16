@@ -31,6 +31,13 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData {
         return !"MySQL".equals(product);
     }
 
+    /**
+     * for testing purposes only.
+     */
+    public String getTargetDatabaseProductName() throws SQLException {
+        return target.getDatabaseProductName();
+    }
+
     @Override
     public boolean allProceduresAreCallable() throws SQLException {
         return target.allProceduresAreCallable();
