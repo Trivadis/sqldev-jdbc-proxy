@@ -20,7 +20,7 @@ import com.trivadis.jdbcproxy.rewrite.RewriteHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-public class RewriteUtilTests {
+public class RewriteHelperTests {
 
     @Test
     public void replace_backtick_for_Snowflake() {
