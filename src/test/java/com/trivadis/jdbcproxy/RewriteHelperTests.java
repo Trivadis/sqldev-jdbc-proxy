@@ -16,7 +16,7 @@
 
 package com.trivadis.jdbcproxy;
 
-import com.trivadis.jdbcproxy.rewrite.RewriteUtil;
+import com.trivadis.jdbcproxy.rewrite.RewriteHelper;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -24,19 +24,19 @@ public class RewriteUtilTests {
 
     @Test
     public void replace_backtick_for_Snowflake() {
-        RewriteUtil util = new RewriteUtil();
+        RewriteHelper util = new RewriteHelper();
         Assertions.assertEquals("select \"Test\"", util.rewrite("select `Test`", "Snowflake"));
     }
 
     @Test
     public void dont_replace_backtick_for_SQLite() {
-        RewriteUtil util = new RewriteUtil();
+        RewriteHelper util = new RewriteHelper();
         Assertions.assertEquals("select `Test`", util.rewrite("select `Test`", "SQLite"));
     }
 
     @Test
     public void replace_show_databases_forSnowflake() {
-        RewriteUtil util = new RewriteUtil();
+        RewriteHelper util = new RewriteHelper();
         Assertions.assertTrue(util.rewrite("show databases", "Snowflake").startsWith("SELECT database_name"));
     }
 
