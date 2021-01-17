@@ -6,7 +6,7 @@
 
     <groupId>com.trivadis.jdbcproxy</groupId>
     <artifactId>jdbc-proxy</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -185,7 +185,7 @@
     </dependencies>
 
     <!-- More Project Information -->
-    <name>JdbcProxy</name>
+    <name>jdbc-proxy</name>
     <description>JDBC driver for SQL Developer that can delegate MySQL requests to Snowflake, PostgreSQL, SQLite, H2 and MySQL.</description>
     <url>https://github.com/PhilippSalvisberg/sqldev-jdbc-proxy</url>
     <inceptionYear>2021</inceptionYear>
