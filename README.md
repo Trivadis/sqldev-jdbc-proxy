@@ -40,7 +40,7 @@ The full syntax of a JDBC URL supported by the JDBC proxy driver looks as follow
 jdbc:mysql:<target-jdbc-url>:[<port>]/[database]
 ```
 
-This looks like a MySQL JDBC URL, because the proxy driver is mimicking a MySQL JDBC driver. However, the part which contains the `hostname` in a MySQL URL contains now a <target-jdbc-url>. This <target-jdbc-url> has to be entered in the "Hostname" field of the "New / Select Database Connection" dialog in SQL Developer.
+This looks like a MySQL JDBC URL, because the proxy driver is mimicking a MySQL JDBC driver. However, the part which contains the `hostname` in a MySQL URL contains now a `<target-jdbc-url>`. This `<target-jdbc-url>` has to be entered in the "Hostname" field of the "New / Select Database Connection" dialog in SQL Developer.
 
 ![SQL Developer New Database Connection](images/sqldev-connect.png)
 
