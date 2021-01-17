@@ -48,11 +48,11 @@ Only the values for "Username", "Password" and "Hostname" are used for build the
 
 | Target Database | JDBC URL (in Hostname) | Notes |
 | --------------- | ---------------------- | ----- |
-| [Snowflake](https://docs.snowflake.com/en/user-guide/jdbc-configure.html#connection-parameters) | jdbc:snowflake://\<account\>.snowflakecomputing.com:443/?db=toucan_db&warehouse=toucan_wh&schema=toucan_schema&role=training_role | Properties `db`, `warehouse`, `schema` and `role` are set in the URL. |
-| [PostgreSQL](https://jdbc.postgresql.org/documentation/head/connect.html) | jdbc:postgresql://localhost:5432/postgres | No additional properties configured. |
-| [SQLite](https://github.com/xerial/sqlite-jdbc) | jdbc:sqlite:/Users/phs/sqldev_sqlite.db | No additional properties supported. |
-| [H2](http://www.h2database.com/html/tutorial.html?highlight=JDBC_URL&search=jdbc#connecting_using_jdbc) | jdbc:h2:/Users/phs/h2testphs | No additional properties supported. |
-| [MySQL](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html) | jdbc:mysql://localhost:3306/public?zeroDateTimeBehavior=CONVERT_TO_NULL | Property `zeroDateTimeBehavior` is set in the URL. The default is EXCEPTION, which is overridden by SQL Developer. |
+| [Snowflake](https://docs.snowflake.com/en/user-guide/jdbc-configure.html#connection-parameters) | `jdbc:snowflake://<account>.snowflakecomputing.com:443/?db=toucan_db&warehouse=toucan_wh&schema=toucan_schema&role=training_role` | Properties `db`, `warehouse`, `schema` and `role` are set in the URL. |
+| [PostgreSQL](https://jdbc.postgresql.org/documentation/head/connect.html) | `jdbc:postgresql://localhost:5432/postgres` | No additional properties configured. |
+| [SQLite](https://github.com/xerial/sqlite-jdbc) | `jdbc:sqlite:/Users/phs/sqldev_sqlite.db` | No additional properties supported. |
+| [H2](http://www.h2database.com/html/tutorial.html?highlight=JDBC_URL&search=jdbc#connecting_using_jdbc) | `jdbc:h2:/Users/phs/h2testphs` | No additional properties supported. |
+| [MySQL](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html) | `jdbc:mysql://localhost:3306/public?zeroDateTimeBehavior=CONVERT_TO_NULL` | Property `zeroDateTimeBehavior` is set in the URL. The default is EXCEPTION, which is overridden by SQL Developer. |
 
 ## Issues
 Please file your bug reports, enhancement requests, questions and other support requests within [Github's issue tracker](https://help.github.com/articles/about-issues/).
