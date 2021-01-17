@@ -96,8 +96,15 @@ public class ProxyDriver implements Driver {
     static {
         try {
             DriverManager.registerDriver(new ProxyDriver());
+            // ensure all target drivers are registered upfront
+            // this might lead to duplicate registered drivers, but that should not be a big problem
+            DriverManager.registerDriver(new com.mysql.cj.jdbc.Driver());
+            DriverManager.registerDriver(new net.snowflake.client.jdbc.SnowflakeDriver());
+            DriverManager.registerDriver(new org.postgresql.Driver());
+            DriverManager.registerDriver(new org.sqlite.JDBC());
+            DriverManager.registerDriver(new org.h2.Driver());
         } catch (SQLException e) {
-            throw new RuntimeException("Driver cannot be registered.");
+            throw new RuntimeException("Drivers cannot be registered.");
         }
     }
 }
