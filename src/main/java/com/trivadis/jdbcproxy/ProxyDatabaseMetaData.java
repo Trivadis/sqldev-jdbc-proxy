@@ -696,7 +696,44 @@ public class ProxyDatabaseMetaData implements DatabaseMetaData {
 
     @Override
     public ResultSet getImportedKeys(String catalog, String schema, String table) throws SQLException {
-        return target.getImportedKeys(catalog, schema, table);
+        if (getTargetDatabaseProductName().equals("SQLite")) {
+            // workaround for issue #1 - simplified stmt to show foreign key relationships in model of SQLDev
+            PreparedStatement stmt = target.getConnection().prepareStatement(
+                    "SELECT ? AS PKTABLE_CAT,\n" +
+                    "       ? AS PKTABLE_SCHEM,\n" +
+                    "       fkbase.`table` AS PKTABLE_NAME,\n" +
+                    "       pk.name AS PKCOLUMN_NAME,\n" +
+                    "       ? AS FKTABLE_CAT,\n" +
+                    "       ? AS FKTABLE_SCHEM,\n" +
+                    "       ? AS FKTABLE_NAME,\n" +
+                    "       fkbase.`from` AS FKCOLUMN_NAME,\n" +
+                    "       fkbase.seq AS KEY_SEQ,\n" +
+                    "       ? AS UPDATE_RULE,\n" +
+                    "       ? AS DELETE_RULE,\n" +
+                    "       ? || '_fk' || (fkbase.id + 1) AS FK_NAME,\n" +
+                    "       fkbase.`table` || '__IDX' AS PK_NAME,\n" +
+                    "       ? AS DEFERRABILITY\n" +
+                    "  FROM pragma_foreign_key_list (?) fkbase\n" +
+                    " CROSS JOIN pragma_table_info (?) fk\n" +
+                    " CROSS JOIN pragma_table_info (fkbase.`table`) pk\n" +
+                    " WHERE fk.pk != 0\n" +
+                    "   AND pk.pk != 0\n" +
+                    " ORDER BY 3, 4");
+            stmt.setString(1, catalog);
+            stmt.setString(2, schema);
+            stmt.setString(3, catalog);
+            stmt.setString(4, schema);
+            stmt.setString(5, table);
+            stmt.setInt(6, this.importedKeyNoAction);
+            stmt.setInt(7, this.importedKeyNoAction);
+            stmt.setString(8, table);
+            stmt.setInt(9, this.importedKeyInitiallyDeferred);
+            stmt.setString(10, table);
+            stmt.setString(11, table);
+            return stmt.executeQuery();
+        } else {
+            return target.getImportedKeys(catalog, schema, table);
+        }
     }
 
     @Override
