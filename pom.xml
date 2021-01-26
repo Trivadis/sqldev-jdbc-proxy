@@ -12,7 +12,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.source>8</maven.compiler.source>
         <maven.compiler.target>8</maven.compiler.target>
-        <sqldev.basedir>/Applications/SQLDeveloper20.2.0.app/Contents/Resources/sqldeveloper</sqldev.basedir>
+        <sqldev.basedir>/Applications/SQLDeveloper20.4.0.app/Contents/Resources/sqldeveloper</sqldev.basedir>
     </properties>
 
     <build>

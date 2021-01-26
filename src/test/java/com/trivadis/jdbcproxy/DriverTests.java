@@ -102,8 +102,6 @@ public class DriverTests {
         /**
          * This method uses the first registered driver that accepts the JDBC URL.
          * Drivers are registered based on the JAR's service configuration (META-INF/services).
-         * In the test environment this is always the original MySQL driver "com.mysql.cj.jdbc.Driver",
-         * In the production environment it's the proxy driver (based on position in class path).
          */
         @Test
         void with_default_Driver_without_Proxy() throws SQLException {
@@ -115,8 +113,11 @@ public class DriverTests {
             String actual = jdbcTemplate.queryForObject("select 'Hello World!' as test", String.class);
             Assertions.assertEquals("Hello World!", actual);
             Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
-            ClassCastException ex = Assertions.assertThrows(ClassCastException.class, () -> getTargetProductName(dataSource));
-            Assertions.assertTrue(ex.getMessage().contains("com.mysql.cj.jdbc.DatabaseMetaDataUsingInfoSchema cannot be cast to"));
+            try {
+                Assertions.assertEquals("MySQL", getTargetProductName(dataSource));
+            } catch (ClassCastException ex) {
+                Assertions.assertEquals("MySQL", dataSource.getConnection().getMetaData().getDatabaseProductName());
+            }
         }
 
         /**
