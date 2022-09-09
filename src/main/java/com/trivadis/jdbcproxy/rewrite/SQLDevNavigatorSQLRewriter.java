@@ -110,7 +110,7 @@ public class SQLDevNavigatorSQLRewriter {
                 return "SELECT table_name\n" +
                         "  FROM information_schema.tables\n" +
                         " WHERE table_schema = ?\n" +
-                        "   AND ( table_type = 'TABLE'\n" +
+                        "   AND ( table_type IN ('TABLE', 'BASE TABLE')\n" +
                         "    OR table_schema = 'INFORMATION_SCHEMA' )\n" +
                         " ORDER BY table_name";
             } else if (SQLITE.equals(product)) {
