@@ -1,3 +1,7 @@
+# Discontinuation Notice
+
+@PhilippSalvisberg no longer work for Trivadis - Part of Accenture and no one at Trivadis/Accenture will continue this project. Therefore, this GitHub repository was archived on 30 August 2024.
+
 # JDBC Proxy for SQL Developer
 
 ## Introduction
@@ -10,11 +14,11 @@ This JDBC driver is mimicking a MySQL driver. As a result it can be configured a
 - [H2](https://www.h2database.com/html/main.html)
 - [MySQL](https://www.mysql.com/)
 
-SQL Developer provides a reduced functionality for non Oracle Databases. This driver allows you to connect to these databases and use the features for MySQL within SQL Developer. 
+SQL Developer provides a reduced functionality for non Oracle Databases. This driver allows you to connect to these databases and use the features for MySQL within SQL Developer.
 
 ## What Does the JDBC Proxy Besides Delegating Calls?
 
-The proxy driver rewrites some SQL statements to the SQL dialect of the target database. This ensures that the statements executed during navigation in the Connections window are understood by the target driver, and a meaningful result is returned. 
+The proxy driver rewrites some SQL statements to the SQL dialect of the target database. This ensures that the statements executed during navigation in the Connections window are understood by the target driver, and a meaningful result is returned.
 
 The rewritten SQL is processed by the target JDBC driver, and the result is presented by SQL Developer which thinks it is talking to a MySQL database.
 
@@ -28,7 +32,7 @@ Binary releases are published [here](https://github.com/Trivadis/sqldev-jdbc-pro
 2. Unzip the downloaded file in a folder of your choice
 3. Register the `jdbc-proxy-0.1.0.jar` file in the "Third Party JDBC Drivers" section of the SQL Developer preferences as shown in the following screenshot
 
-   ![SQL Developer Preferences](images/sqldev-preferences.png)   
+   ![SQL Developer Preferences](images/sqldev-preferences.png)
 
     Please ensure that the proxy driver is the first driver in the list. Restart SQL Developer, if you had to change the order of the JDBC drivers.
 
